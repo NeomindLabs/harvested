@@ -3,7 +3,7 @@ require 'spec_helper'
 describe 'harvest projects' do
   it 'allows adding, updating and removing projects' do
     cassette('project1') do
-      client = harvest.clients.create(FactoryGirl.attributes_for(:client))
+      client = harvest.clients.create(FactoryBot.attributes_for(:client))
 
       project       = harvest.projects.create(
         "name"      => "Test Project",
@@ -24,7 +24,7 @@ describe 'harvest projects' do
 
   it 'allows activating and deactivating clients' do
     cassette('project2') do
-      client = harvest.clients.create(FactoryGirl.attributes_for(:client))
+      client = harvest.clients.create(FactoryBot.attributes_for(:client))
 
       project       = harvest.projects.create(
         "name"      => "Test Project",

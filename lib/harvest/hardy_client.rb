@@ -1,79 +1,81 @@
+require 'delegate'
+
 module Harvest
-  class HardyClient < Delegator
+  class HardyClient < SimpleDelegator
     def initialize(client, max_retries)
       super(client)
-      @_sd_obj = @client = client
+      @client = client
       @max_retries = max_retries
-      (@client.public_methods - Object.public_instance_methods).each do |name|
-        instance_eval <<-END
-          def #{name}(*args)
-            wrap_collection do
-              @client.send('#{name}', *args)
-            end
+
+      define_delegated_methods(@client)
+    end
+
+    private
+
+    def define_delegated_methods(target)
+      (target.public_methods - Object.public_instance_methods).each do |method_name|
+        define_singleton_method(method_name) do |*args, **kwargs, &block|
+          wrap_collection do
+            target.public_send(method_name, *args, **kwargs, &block)
           end
-        END
+        end
       end
     end
-    
-    def __getobj__; @_sd_obj; end
-    def __setobj__(obj); @_sd_obj = obj; end
-    
+
     def wrap_collection
       collection = yield
-      HardyCollection.new(collection, self, @max_retries)
+      HardyCollection.new(collection, @client, @max_retries)
     end
-    
-    class HardyCollection < Delegator
+
+    class HardyCollection < SimpleDelegator
       def initialize(collection, client, max_retries)
         super(collection)
-        @_sd_obj = @collection = collection
+        @collection = collection
         @client = client
         @max_retries = max_retries
-        (@collection.public_methods - Object.public_instance_methods).each do |name|
-          instance_eval <<-END
-            def #{name}(*args)
-              retry_rate_limits do
-                @collection.send('#{name}', *args)
-              end
-            end
-          END
-        end
+
+        define_delegated_methods(@collection)
       end
-      
-      def __getobj__; @_sd_obj; end
-      def __setobj__(obj); @_sd_obj = obj; end
-      
-      def retry_rate_limits
-        retries = 0
-        
-        retry_func = lambda do |e|
-          if retries < @max_retries
-            retries += 1
-            true
-          else
-            raise e
+
+      private
+
+      def define_delegated_methods(target)
+        (target.public_methods - Object.public_instance_methods).each do |method_name|
+          define_singleton_method(method_name) do |*args, **kwargs, &block|
+            retry_rate_limits do
+              target.public_send(method_name, *args, **kwargs, &block)
+            end
           end
         end
-        
+      end
+
+      def retry_rate_limits
+        retries = 0
+
         begin
           yield
         rescue Harvest::RateLimited => e
-          seconds = if e.response.headers["retry-after"]
-            e.response.headers["retry-after"].to_i
-          else
-            16
-          end
-          sleep(seconds)
+          sleep(retry_after_seconds(e))
           retry
         rescue Harvest::Unavailable, Harvest::InformHarvest => e
-          would_retry = retry_func.call(e)
-          sleep(16) if @client.account.rate_limit_status.over_limit?
-          retry if would_retry
+          if (retries += 1) <= @max_retries
+            sleep(16) if @client.account.rate_limit_status.over_limit?
+            retry
+          else
+            raise e
+          end
         rescue Net::HTTPError, Net::HTTPFatalError => e
-          retry if retry_func.call(e)
-        rescue SystemCallError => e
-          retry if e.is_a?(Errno::ECONNRESET) && retry_func.call(e)
+          retry if (retries += 1) <= @max_retries
+          raise e
+        rescue Errno::ECONNRESET => e
+          retry if (retries += 1) <= @max_retries
+          raise e
         end
+      end
+
+      def retry_after_seconds(error)
+        retry_after = error.response.headers["retry-after"]
+        retry_after ? retry_after.to_i : 16
       end
     end
   end

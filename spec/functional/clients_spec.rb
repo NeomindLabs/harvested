@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'harvest clients' do
   it 'allows adding, updating and removing clients' do
-    client_attributes = FactoryGirl.attributes_for(:client)
+    client_attributes = FactoryBot.attributes_for(:client)
 
     cassette("client") do
       client = harvest.clients.create(client_attributes)
@@ -19,7 +19,7 @@ describe 'harvest clients' do
 
   it 'allows activating and deactivating clients' do
     cassette("client2") do
-      client = harvest.clients.create(FactoryGirl.attributes_for(:client))
+      client = harvest.clients.create(FactoryBot.attributes_for(:client))
       client.should be_active
 
       client = harvest.clients.deactivate(client)
@@ -33,7 +33,7 @@ describe 'harvest clients' do
   context "contacts" do
     it "allows adding, updating, and removing contacts" do
       cassette("client3") do
-        client = harvest.clients.create(FactoryGirl.attributes_for(:client))
+        client = harvest.clients.create(FactoryBot.attributes_for(:client))
 
         contact        = harvest.contacts.create(
           "client_id"  => client.id,

@@ -17,9 +17,9 @@ describe 'harvest invoices' do
 
   it 'allows adding, updating and removing invoices' do
     cassette('invoice2') do
-      client  = harvest.clients.create(FactoryGirl.attributes_for(:client))
+      client  = harvest.clients.create(FactoryBot.attributes_for(:client))
 
-      invoice = Harvest::Invoice.new(FactoryGirl.attributes_for(:invoice, :client_id => client.id, update_line_items: true))
+      invoice = Harvest::Invoice.new(FactoryBot.attributes_for(:invoice, :client_id => client.id, update_line_items: true))
       invoice = harvest.invoices.create(invoice)
 
       invoice.subject.should == "Invoice for Joe's Stream Cleaning"
@@ -27,7 +27,7 @@ describe 'harvest invoices' do
       invoice.line_items.size.should == 1
 
       invoice.subject    = "Updated Invoice for Joe"
-      invoice.line_items << FactoryGirl.build(:line_item)
+      invoice.line_items << FactoryBot.build(:line_item)
       invoice.update_line_items = true
 
       invoice = harvest.invoices.update(invoice)
@@ -42,9 +42,9 @@ describe 'harvest invoices' do
 
   it 'allows finding one invoice or all invoices with parameters' do
     cassette('invoice3') do
-      client = harvest.clients.create(FactoryGirl.attributes_for(:client))
+      client = harvest.clients.create(FactoryBot.attributes_for(:client))
 
-      project_attributes = FactoryGirl.attributes_for(:project)
+      project_attributes = FactoryBot.attributes_for(:project)
       project_attributes[:client_id] = client.id
 
       project = harvest.projects.create(project_attributes)

@@ -1,7 +1,7 @@
 require 'harvested'
 require 'webmock/rspec'
 require 'vcr'
-require 'factory_girl'
+require 'factory_bot'
 require 'byebug'
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each {|f| require File.expand_path(f) }
@@ -17,7 +17,7 @@ VCR.configure do |c|
   c.allow_http_connections_when_no_cassette = true
 end
 
-FactoryGirl.find_definitions
+FactoryBot.find_definitions
 
 RSpec.configure do |config|
   config.include HarvestedHelpers

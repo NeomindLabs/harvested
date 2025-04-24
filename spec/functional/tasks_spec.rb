@@ -22,7 +22,7 @@ describe 'harvest tasks' do
   context "task assignments" do
     it "allows adding, updating, and removing tasks from projects" do
       cassette('tasks2') do
-        client = harvest.clients.create(FactoryGirl.attributes_for(:client))
+        client = harvest.clients.create(FactoryBot.attributes_for(:client))
 
         project       = harvest.projects.create(
           "name"      => "Test Project2",
@@ -63,7 +63,7 @@ describe 'harvest tasks' do
 
     it "allows creating and assigning the task at the same time" do
       cassette('tasks3') do
-        client = harvest.clients.create(FactoryGirl.attributes_for(:client))
+        client = harvest.clients.create(FactoryBot.attributes_for(:client))
 
         project       = harvest.projects.create(
           "name"      => "Test Project3",

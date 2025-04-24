@@ -6,11 +6,11 @@ describe 'harvest invoice messages' do
 
     cassette('invoice_message1') do
       # create a new client and invoice
-      client = harvest.clients.create(FactoryGirl.attributes_for(:client))
-      invoice = harvest.invoices.create(FactoryGirl.attributes_for(:invoice, :client_id => client.id, :issued_at => Date.today - 2, :due_at_human_format => 'NET 30'))
+      client = harvest.clients.create(FactoryBot.attributes_for(:client))
+      invoice = harvest.invoices.create(FactoryBot.attributes_for(:invoice, :client_id => client.id, :issued_at => Date.today - 2, :due_at_human_format => 'NET 30'))
 
       # add a message to the invoice
-      message = Harvest::InvoiceMessage.new(FactoryGirl.attributes_for(:invoice_message,
+      message = Harvest::InvoiceMessage.new(FactoryBot.attributes_for(:invoice_message,
                                                                        :invoice_id => invoice.id,
                                                                        :body => "A message body"))
       message_saved = harvest.invoice_messages.create(message)
@@ -20,7 +20,7 @@ describe 'harvest invoice messages' do
       message_found.should == message_saved
 
       # add another message to the invoice
-      message2 = Harvest::InvoiceMessage.new(FactoryGirl.attributes_for(:invoice_message,
+      message2 = Harvest::InvoiceMessage.new(FactoryBot.attributes_for(:invoice_message,
                                                                         :invoice_id => invoice.id,
                                                                         :body => "Another message body"))
       message2_saved = harvest.invoice_messages.create(message2)
@@ -49,15 +49,15 @@ describe 'harvest invoice messages' do
   it 'allows to change the state of an invoice' do
     cassette('invoice_message2') do
       # create a new client and invoice
-      client = harvest.clients.create(FactoryGirl.attributes_for(:client))
-      invoice = harvest.invoices.create(FactoryGirl.attributes_for(:invoice, :client_id => client.id))
+      client = harvest.clients.create(FactoryBot.attributes_for(:client))
+      invoice = harvest.invoices.create(FactoryBot.attributes_for(:invoice, :client_id => client.id))
 
       # check the invoice state is 'draft'
       invoice = harvest.invoices.find(invoice.id)
       invoice.state.should == 'draft'
 
       # -- mark as sent
-      message = Harvest::InvoiceMessage.new(FactoryGirl.attributes_for(:invoice_message,
+      message = Harvest::InvoiceMessage.new(FactoryBot.attributes_for(:invoice_message,
                                                                        :invoice_id => invoice.id,
                                                                        :body => "sent body message"))
       harvest.invoice_messages.mark_as_sent(message)
